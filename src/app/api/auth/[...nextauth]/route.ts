@@ -1,4 +1,4 @@
-import NextAuth, { Session, User, DefaultSession } from "next-auth";
+import NextAuth, { Session, DefaultSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 // 扩展 DefaultSession 类型以包含 accessToken
