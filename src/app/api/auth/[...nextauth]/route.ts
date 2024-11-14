@@ -1,7 +1,5 @@
-import NextAuth, { DefaultSession } from "next-auth";
+import NextAuth, { Session, User, DefaultSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { JWT } from "next-auth/jwt";
-import { Session, User } from "next-auth";
 
 // 扩展 DefaultSession 类型以包含 accessToken
 declare module "next-auth" {
@@ -15,6 +13,11 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      authorization: {
+        params: {
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`, // 确保与控制台中配置的 URI 匹配
+        },
+      },
     }),
   ],
   pages: {
@@ -23,29 +26,17 @@ export const authOptions = {
   },
 
   callbacks: {
-    async jwt({ token, account }: { token: JWT; account?: any }) {
-      if (account) {
+    async jwt({ token, account }: { token: any; account?: any }) {
+      // 如果账户存在并且包含 access_token，则存储它
+      if (account?.access_token) {
         token.accessToken = account.access_token; // 保存访问令牌
       }
       return token;
     },
 
-    // 使用 DefaultSession 类型
-    async session({
-      session,
-      token,
-      user,
-      newSession,
-      trigger,
-    }: {
-      session: Session; // 使用 Session 类型
-      token: JWT;
-      user: User;
-      newSession: any;
-      trigger: "update";
-    }) {
+    async session({ session, token }: { session: Session; token: any }) {
       session.accessToken = token.accessToken as string | undefined;
-      return session; // 返回 session 时，不需要手动指定类型
+      return session;
     },
 
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {

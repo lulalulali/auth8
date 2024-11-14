@@ -9,20 +9,23 @@ export default function Login() {
 
   useEffect(() => {
     const fetchSession = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error } = await supabase.auth.getSession();
       if (sessionData?.session) {
-        setUser(sessionData.session.user);
+        setUser(sessionData.session.user); // 设置当前用户
+      }
+      if (error) {
+        console.error(error);
       }
     };
-  
+
     fetchSession();
-  
+
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setUser(session?.user ?? null);
+        setUser(session?.user ?? null); // 监听认证状态变化
       }
     );
-  
+
     return () => {
       authListener?.subscription?.unsubscribe();
     };
@@ -37,7 +40,13 @@ export default function Login() {
 
       if (error) throw error;
 
-      setUser(user);
+      // 在这里，data 只包含一个 url 和 provider 信息
+      // 我们需要确保获取到 OAuth 登录后返回的 session 信息
+      const session = await supabase.auth.getSession(); // 获取当前 session
+      if (session.data?.session?.user) {
+        setUser(session.data.session.user); // 从 session 中获取用户信息
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error(error);
