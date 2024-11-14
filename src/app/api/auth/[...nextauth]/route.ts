@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { Session } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 // 扩展 DefaultSession 类型以包含 accessToken
@@ -27,7 +27,7 @@ const authOptions = {
 
   callbacks: {
     // 在 JWT 回调中处理访问令牌
-    async jwt({ token, account }) {
+    async jwt({ token, account }: { token: any; account?: any }) {
       if (account?.access_token) {
         token.accessToken = account.access_token; // 保存访问令牌
       }
@@ -35,7 +35,7 @@ const authOptions = {
     },
 
     // 在 session 回调中添加访问令牌
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: any }) {
       if (token.accessToken) {
         session.accessToken = token.accessToken; // 将访问令牌传递到 session
       }
@@ -43,7 +43,7 @@ const authOptions = {
     },
 
     // 重定向回调
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       if (url.startsWith(baseUrl)) {
         return url; // 默认情况下重定向到当前 URL
       } else {
